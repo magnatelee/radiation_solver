@@ -19,6 +19,46 @@ local std   = terralib.includec("stdlib.h")
 local cmath = terralib.includec("math.h")
 local domconfig = require("dom_config")
 
+-- Compile and link circuit.cc
+local cdom
+do
+  local root_dir = arg[0]:match(".*/") or "./"
+  local runtime_dir = os.getenv('LG_RT_DIR') .. "/" or root_dir .. "../../../runtime/"
+  local legion_dir = runtime_dir .. "legion/"
+  local mapper_dir = runtime_dir .. "mappers/"
+  local realm_dir = runtime_dir .. "realm/"
+  local dom_cc = root_dir .. "dom.cc"
+  local dom_so
+  if os.getenv('SAVEOBJ') == '1' then
+    dom_so = root_dir .. "libdom.so"
+  else
+    dom_so = os.tmpname() .. ".so"
+  end
+  local cxx = os.getenv('CXX') or 'c++'
+
+  local cxx_flags = os.getenv('CC_FLAGS') or ''
+  cxx_flags = cxx_flags .. " -O2 -Wall -Werror"
+  if os.execute('test "$(uname)" = Darwin') == 0 then
+    cxx_flags =
+      (cxx_flags ..
+         " -dynamiclib -single_module -undefined dynamic_lookup -fPIC")
+  else
+    cxx_flags = cxx_flags .. " -shared -fPIC"
+  end
+
+  local cmd = (cxx .. " " .. cxx_flags .. " -I " .. runtime_dir .. " " ..
+                 " -I " .. mapper_dir .. " " .. " -I " .. legion_dir .. " " ..
+                 " -I " .. realm_dir .. " " .. dom_cc .. " -o " .. dom_so)
+  if os.execute(cmd) ~= 0 then
+    print("Error: failed to compile " .. dom_cc)
+    assert(false)
+  end
+  terralib.linklibrary(dom_so)
+  cdom = terralib.includec("dom.h", {"-I", root_dir, "-I", runtime_dir,
+                                     "-I", mapper_dir, "-I", legion_dir,
+                                     "-I", realm_dir})
+end
+
 -- Some math definitions
 
 local min = regentlib.fmin
@@ -1170,7 +1210,7 @@ task main()
   var res : double = 1.0
   var N   : int64[1]
 
-  var nt : int64 = 2 -- # tiles per direction
+  var nt : int64 = 4 -- # tiles per direction
 
   -- var filename : rawstring = quad_file
 
@@ -1372,9 +1412,9 @@ task main()
 
     t = t + 1
 
-    if t > 2 then
-      break
-    end
+    --if t > 2 then
+    --  break
+    --end
 
   end
 
@@ -1388,4 +1428,4 @@ task main()
   -- end
 end
 
-regentlib.start(main)
+regentlib.start(main, cdom.register_mappers)
