@@ -17,6 +17,7 @@ import "regent"
 local c     = regentlib.c
 local std   = terralib.includec("stdlib.h")
 local cmath = terralib.includec("math.h")
+local domconfig = require("dom_config")
 
 -- Some math definitions
 
@@ -24,27 +25,12 @@ local min = regentlib.fmin
 local max = regentlib.fmax
 local pi  = 2.0*cmath.acos(0.0)
 
--- Quadrature file name
-
-local quad_file = "radiation_solver/S8.dat"
-
 -- Grid size (x cells, y cells)
 
 local Nx = 1000
 local Ny = 1000
 
---todo: Read from file in Lua
-
-terra get_number_angles()
-	var filename : rawstring = "radiation_solver/S8.dat"
-  	var f = c.fopen(filename, "rb")
-  	var N   : int64[1]
-  	c.fscanf(f, "%d\n", N)
-  	c.fclose(f)
-  	return N[0]
-end
-
-local N_angles = get_number_angles()
+local N_angles = domconfig.get_number_angles()
 
 -- Domain size
 
@@ -175,7 +161,8 @@ do
 
 end
 
-task initialize_angle_values(angle_values : region(ispace(int1d), angle_value))
+task initialize_angle_values(quad_file : int8[256],
+                             angle_values : region(ispace(int1d), angle_value))
 where writes (angle_values.xi, angle_values.eta, angle_values.w)
 
 do
@@ -184,7 +171,7 @@ do
 
   	var val : double[1]
 
-  	var f = c.fopen("radiation_solver/S8.dat", "rb")
+  	var f = c.fopen(quad_file, "rb")
 
   	read_val(f, val) -- gets rid of num angles
 
@@ -1100,7 +1087,8 @@ do
   	end
 end
 
-task create_tecplot_file(points : region(ispace(int2d), point))
+task create_tecplot_file(output_file : int8[256],
+                         points : region(ispace(int2d), point))
 where
 	reads (points.G),
 	reads writes (points.x, points.y)
@@ -1118,7 +1106,8 @@ do
 
  	-- Tecplot ASCII format (cell-centered)
 
-  	var f = c.fopen("radiation_solver/intensity_parallel.dat", "w")
+  	var f = c.fopen(output_file, "w")
+    regentlib.assert(f ~= [&c.FILE](nil), "invalid path for an output file")
 
   	-- Write header
 
@@ -1192,8 +1181,9 @@ task main()
 	var angle_values = region(angle_indices, angle_value)
 
 	-- Initialize all arrays in our field space on the grid.
-
-	initialize_angle_values(angle_values)
+  var config : DOMConfig
+  config:initialize_from_command()
+	initialize_angle_values(config.quad_file, angle_values)
 
 	-- Tile partition cells
 	var tiles = ispace(int2d, {x = nt, y = nt})
@@ -1321,7 +1311,9 @@ task main()
 
     -- Write a Tecplot file to vizualize the intensity.
     --todo: divide by tile?
-    -- create_tecplot_file(points)
+    -- if config.dump_output then
+    --   create_tecplot_file(config.output_file, points)
+    -- end
 end
 
 regentlib.start(main)
