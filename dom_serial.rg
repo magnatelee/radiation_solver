@@ -376,7 +376,7 @@ do
 
 
     -- Determine our sweeping direction. If xi > 0, angle points in +x,
-    -- so we sweep from left to right. Otherwise, angle points in -x, 
+    -- so we sweep from left to right. Otherwise, angle points in -x,
     -- so sweep from right to left.
 
     if (points[{m,0,0}].xi > 0) then
@@ -418,11 +418,11 @@ do
 
         -- Integrate to compute cell-centered value of I.
 
-        points[{m,i,j}].I = (points[{0,i,j}].S*dx*dy 
-          + cmath.fabs(points[{m,0,0}].xi)*dy*points[{m,indx,j}].Ifx/gamma 
+        points[{m,i,j}].I = (points[{0,i,j}].S*dx*dy
+          + cmath.fabs(points[{m,0,0}].xi)*dy*points[{m,indx,j}].Ifx/gamma
           + cmath.fabs(points[{m,0,0}].eta)*dx*points[{m,i,indy}].Ify/gamma)
-        /(points[{0,i,j}].sigma*dx*dy 
-          + cmath.fabs(points[{m,0,0}].xi)*dy/gamma 
+        /(points[{0,i,j}].sigma*dx*dy
+          + cmath.fabs(points[{m,0,0}].xi)*dy/gamma
           + cmath.fabs(points[{m,0,0}].eta)*dx/gamma)
 
 
@@ -570,8 +570,8 @@ task main()
 
   -- Create our grid index space. Here, we are using a 3D index space to
   -- defined a set of angles and a 2D grid in space. Maybe there is a better
-  -- way to do this with separate regions? Note the +1 for the grid directions, 
-  -- these are due to the face intensity arrays being face-based and needing 
+  -- way to do this with separate regions? Note the +1 for the grid directions,
+  -- these are due to the face intensity arrays being face-based and needing
   -- an additional slot.
 
   var grid = ispace(int3d, { x = N[0], y = Nx+1, z = Ny+1 })
@@ -589,29 +589,29 @@ task main()
   initialize(points, filename)
 
   while (res > tol) do
-    
+
     -- Update the source term (in this problem, isotropic).
-    
+
     source_term(points)
-    
+
     -- Update the grid boundary intensities.
-    
+
     west_bound(points)
     east_bound(points)
 
     south_bound(points)
     north_bound(points)
-        
+
     -- Perform the sweep for computing new intensities.
-    
+
     sweep(points)
-    
+
     -- Compute the residual and output to the screen.
-    
+
     res = residual(points, t)
 
     -- Update the intensities and the iteration number.
-        
+
     update(points)
     t = t + 1
 

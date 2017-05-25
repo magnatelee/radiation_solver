@@ -117,7 +117,7 @@ fspace point {
 	G : double,						-- intensity summation over all angles
 
 	-- source term
-	S : double,  	
+	S : double,
 
 	-- constants
 	T : double,		-- blackbody source
@@ -205,7 +205,7 @@ do
   		var index : int = (i % 4) * (N_angles/4) + (i / 4)
 		angle_values[index].w = val[0]
 	end
-  
+
 
  	c.fclose(f)
 
@@ -221,7 +221,7 @@ where
   	points.Iiter_1,
   	points.Iiter_2,
   	points.Iiter_3,
-  	points.Iiter_4), 
+  	points.Iiter_4),
   writes(points.Ib, points.sigma, points.G, points.S)
 do
 
@@ -253,7 +253,7 @@ do
 	    	points[i].I_4[m]     = 0.0
 	    	points[i].Iiter_4[m] = 0.0
 		end
-	    
+
     	points[i].G = 0.0
 
     	-- Source term
@@ -321,14 +321,14 @@ end
 -- x
 task make_interior_partition_x_hi(faces : region(ispace(int2d), x_face),
 							tiles : ispace(int2d),
-							ntiles : int64, nx : int64, ny : int64) 
-	
+							ntiles : int64, nx : int64, ny : int64)
+
 	var coloring = c.legion_domain_point_coloring_create()
 	for tile in tiles do
 
 		var val : int = -1
 		if tile.x == tiles.bounds.hi.x-1 then val = 0 end -- include extra face in last partition
-	    var lo = int2d { x = tile.x * (nx-1) / ntiles, y = tile.y * ny / ntiles} 
+	    var lo = int2d { x = tile.x * (nx-1) / ntiles, y = tile.y * ny / ntiles}
 		var hi = int2d { x = (tile.x+1) * (nx-1) / ntiles + val, y = (tile.y+1) * ny / ntiles - 1}
 
 		-- Create an empty partition
@@ -347,8 +347,8 @@ end
 
 task make_interior_partition_x_lo(faces : region(ispace(int2d), x_face),
 							tiles : ispace(int2d),
-							ntiles : int64, nx : int64, ny : int64) 
-	
+							ntiles : int64, nx : int64, ny : int64)
+
 	var coloring = c.legion_domain_point_coloring_create()
 	for tile in tiles do
 
@@ -356,7 +356,7 @@ task make_interior_partition_x_lo(faces : region(ispace(int2d), x_face),
 
 		var val : int = 1
 		if tile.x == 1 then val = 0 end -- include extra face in first partition
-	    var lo = int2d { x = (tile.x-1) * (nx-1) / ntiles + val, y = tile.y * ny / ntiles} 
+	    var lo = int2d { x = (tile.x-1) * (nx-1) / ntiles + val, y = tile.y * ny / ntiles}
 		var hi = int2d { x = tile.x * (nx-1) / ntiles, y = (tile.y+1) * ny / ntiles - 1}
 
 		-- Create an empty partition
@@ -379,7 +379,7 @@ end
 task make_interior_partition_y_hi(faces : region(ispace(int2d), y_face),
 							tiles : ispace(int2d),
 							ntiles : int64, nx : int64, ny : int64)
-	
+
 	var coloring = c.legion_domain_point_coloring_create()
 	for tile in tiles do
 
@@ -406,7 +406,7 @@ end
 task make_interior_partition_y_lo(faces : region(ispace(int2d), y_face),
 							tiles : ispace(int2d),
 							ntiles : int64, nx : int64, ny : int64)
-	
+
 	var coloring = c.legion_domain_point_coloring_create()
 	for tile in tiles do
 
@@ -435,7 +435,7 @@ task west_bound(faces : region(ispace(int2d), x_face),
 				angle_values : region(ispace(int1d), angle_value))
 where
 	reads (angle_values.w, angle_values.xi),
-	reads writes (faces.Ifx_1, faces.Ifx_2, faces.Ifx_3, faces.Ifx_4) 
+	reads writes (faces.Ifx_1, faces.Ifx_2, faces.Ifx_3, faces.Ifx_4)
 do
 
 	-- Get array bounds
@@ -509,7 +509,7 @@ task east_bound(faces : region(ispace(int2d), x_face),
 				angle_values : region(ispace(int1d), angle_value))
 where
 	reads (angle_values.w, angle_values.xi),
-	reads writes (faces.Ifx_1, faces.Ifx_2, faces.Ifx_3, faces.Ifx_4) 
+	reads writes (faces.Ifx_1, faces.Ifx_2, faces.Ifx_3, faces.Ifx_4)
 do
 
 	-- Get array bounds
@@ -735,7 +735,7 @@ do
   var starty : int64 = limits.lo.y
   var endy   : int64 = limits.hi.y + 1
 
-  
+
   -- Outer loop over all angles.
   for m = 0, N_angles/4 do
 
@@ -770,11 +770,11 @@ do
 
         -- Integrate to compute cell-centered value of I.
 
-        points[{i,j}].I_1[m] = (points[{i,j}].S * dx * dy 
-        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma 
+        points[{i,j}].I_1[m] = (points[{i,j}].S * dx * dy
+        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma
         	+ cmath.fabs(angle_values[angle].eta) * dx * upwind_y_value/gamma)
-        	/(points[{i,j}].sigma * dx * dy 
-        	+ cmath.fabs(angle_values[angle].xi) * dy/gamma 
+        	/(points[{i,j}].sigma * dx * dy
+        	+ cmath.fabs(angle_values[angle].xi) * dy/gamma
         	+ cmath.fabs(angle_values[angle].eta) * dx/gamma)
 
         -- c.printf("x=%d,y=%d,angle=%d I = %lf \n", i, j, angle, points[{i,j}].I_1[m])
@@ -815,7 +815,7 @@ do
   var dindy  : int64 = -1
   var starty : int64 = limits.hi.y
   var endy   : int64 = limits.lo.y - 1
-  
+
   -- Outer loop over all angles.
   for m = 0, N_angles/4 do
 
@@ -849,8 +849,8 @@ do
 
         -- Integrate to compute cell-centered value of I.
 
-        points[{i,j}].I_2[m] = (points[{i,j}].S * dx * dy 
-        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma 
+        points[{i,j}].I_2[m] = (points[{i,j}].S * dx * dy
+        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma
         	+ cmath.fabs(angle_values[angle].eta) * dx * upwind_y_value/gamma)
         	/(points[{i,j}].sigma * dx * dy + cmath.fabs(angle_values[angle].xi) * dy/gamma + cmath.fabs(angle_values[angle].eta) * dx/gamma)
 
@@ -891,7 +891,7 @@ do
   var starty : int64 = limits.lo.y
   var endy   : int64 = limits.hi.y + 1
 
-  
+
   -- Outer loop over all angles.
   for m = 0, N_angles/4 do
 
@@ -925,8 +925,8 @@ do
 
         -- Integrate to compute cell-centered value of I.
 
-        points[{i,j}].I_3[m] = (points[{i,j}].S * dx * dy 
-        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma 
+        points[{i,j}].I_3[m] = (points[{i,j}].S * dx * dy
+        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma
         	+ cmath.fabs(angle_values[angle].eta) * dx * upwind_y_value/gamma)
         	/(points[{i,j}].sigma * dx * dy + cmath.fabs(angle_values[angle].xi) * dy/gamma + cmath.fabs(angle_values[angle].eta) * dx/gamma)
 
@@ -971,7 +971,7 @@ do
   var starty : int64 = limits.hi.y
   var endy   : int64 = limits.lo.y - 1
 
-  
+
   -- Outer loop over all angles.
   for m = 0, N_angles/4 do
 
@@ -1009,8 +1009,8 @@ do
 
         -- Integrate to compute cell-centered value of I.
 
-        points[{i,j}].I_4[m] = (points[{i,j}].S * dx * dy 
-        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma 
+        points[{i,j}].I_4[m] = (points[{i,j}].S * dx * dy
+        	+ cmath.fabs(angle_values[angle].xi) * dy * upwind_x_value/gamma
         	+ cmath.fabs(angle_values[angle].eta) * dx * upwind_y_value/gamma)
         	/(points[{i,j}].sigma * dx * dy + cmath.fabs(angle_values[angle].xi) * dy/gamma + cmath.fabs(angle_values[angle].eta) * dx/gamma)
 
@@ -1026,7 +1026,7 @@ end
 
 task residual(points : region(ispace(int2d), point))
 where
-  reads (points.I_1, points.I_2, points.I_3, points.I_4, 
+  reads (points.I_1, points.I_2, points.I_3, points.I_4,
   	points.Iiter_1, points.Iiter_2, points.Iiter_3, points.Iiter_4)
 do
 
@@ -1058,13 +1058,13 @@ end
 
 task update(points : region(ispace(int2d), point))
 where
-  reads (points.I_1, points.I_2, points.I_3, points.I_4), 
+  reads (points.I_1, points.I_2, points.I_3, points.I_4),
   reads writes(points.Iiter_1, points.Iiter_2, points.Iiter_3, points.Iiter_4)
 do
 
   	-- Update the intensity before moving to the next iteration.
 
-  	for i in points do 
+  	for i in points do
   		for m = 0, N_angles/4 do
   			points[i].Iiter_1[m] = points[i].I_1[m]
   			points[i].Iiter_2[m] = points[i].I_2[m]
@@ -1094,7 +1094,7 @@ do
         		angle = m + (N_angles/4)*2
         		points[{i,j}].G = points[{i,j}].G + angle_values[angle].w*points[{i,j}].I_3[m]
         		angle = m + (N_angles/4)*3
-        		points[{i,j}].G = points[{i,j}].G + angle_values[angle].w*points[{i,j}].I_4[m]        		
+        		points[{i,j}].G = points[{i,j}].G + angle_values[angle].w*points[{i,j}].I_4[m]
       		end
     	end
   	end
@@ -1191,7 +1191,7 @@ task main()
 	var angle_indices = ispace(int1d, N_angles)
 	var angle_values = region(angle_indices, angle_value)
 
-	-- Initialize all arrays in our field space on the grid. 
+	-- Initialize all arrays in our field space on the grid.
 
 	initialize_angle_values(angle_values)
 
@@ -1228,7 +1228,7 @@ task main()
 
 
 	while (res > tol) do
-    
+
 	    -- Update the source term (in this problem, isotropic).
 
 	    for color in tiles do
@@ -1236,13 +1236,13 @@ task main()
 	   	end
 
 	   	-- Update the grid boundary intensities.
-	
+
 	  	-- Update x faces (west bound/east bound)
 	  	for j = [int](tiles.bounds.lo.y), [int](tiles.bounds.hi.y) + 1 do
 	  		west_bound(private_x_faces_hi[{x_faces_tiles.bounds.lo.x,j}], angle_values)
 	  		east_bound(private_x_faces_lo[{x_faces_tiles.bounds.hi.x,j}], angle_values)
 	  	end
-	  	
+
 	  	-- Update y faces (north bound/south bound)
 	  	for i = [int](tiles.bounds.lo.x), [int](tiles.bounds.hi.x) + 1 do
 	  		south_bound(private_y_faces_hi[{i,y_faces_tiles.bounds.lo.y}], angle_values)
@@ -1254,35 +1254,35 @@ task main()
 	  	-- Quadrant 1 - +x, +y
 		for i = tiles.bounds.lo.x, tiles.bounds.hi.x + 1 do
 			for j = tiles.bounds.lo.y, tiles.bounds.hi.y + 1 do
-			
-				sweep_1(private_cells[{i,j}], private_x_faces_lo[{i+1,j}], private_y_faces_lo[{i,j+1}], 
+
+				sweep_1(private_cells[{i,j}], private_x_faces_lo[{i+1,j}], private_y_faces_lo[{i,j+1}],
 					private_x_faces_lo[{i,j}], private_y_faces_lo[{i,j}], angle_values)
 			end
-		end 
+		end
 
 		-- Quadrant 2 - +x, -y
 		for i = tiles.bounds.lo.x, tiles.bounds.hi.x + 1 do
-			for j = tiles.bounds.hi.y, tiles.bounds.lo.y - 1, -1 do 
+			for j = tiles.bounds.hi.y, tiles.bounds.lo.y - 1, -1 do
 
-				sweep_2(private_cells[{i,j}], private_x_faces_lo[{i+1,j}], private_y_faces_hi[{i,j}], 
+				sweep_2(private_cells[{i,j}], private_x_faces_lo[{i+1,j}], private_y_faces_hi[{i,j}],
 					private_x_faces_lo[{i,j}], private_y_faces_hi[{i,j+1}], angle_values)
 			end
 		end
 
 		-- Quadrant 3 - -x, +y
-		for i = tiles.bounds.hi.x, tiles.bounds.lo.x - 1, -1 do 
+		for i = tiles.bounds.hi.x, tiles.bounds.lo.x - 1, -1 do
 			for j = tiles.bounds.lo.y, tiles.bounds.hi.y + 1 do
 
-				sweep_3(private_cells[{i,j}], private_x_faces_hi[{i,j}], private_y_faces_lo[{i,j+1}], 
+				sweep_3(private_cells[{i,j}], private_x_faces_hi[{i,j}], private_y_faces_lo[{i,j+1}],
 					private_x_faces_hi[{i+1,j}], private_y_faces_lo[{i,j}], angle_values)
 			end
 		end
 
 		-- Quadrant 4 - -x, -y
-		for i = tiles.bounds.hi.x, tiles.bounds.lo.x - 1, -1 do 
-			for j = tiles.bounds.hi.y, tiles.bounds.lo.y - 1, -1 do 
+		for i = tiles.bounds.hi.x, tiles.bounds.lo.x - 1, -1 do
+			for j = tiles.bounds.hi.y, tiles.bounds.lo.y - 1, -1 do
 
-				sweep_4(private_cells[{i,j}], private_x_faces_hi[{i,j}], private_y_faces_hi[{i,j}], 
+				sweep_4(private_cells[{i,j}], private_x_faces_hi[{i,j}], private_y_faces_hi[{i,j}],
 					private_x_faces_hi[{i+1,j}], private_y_faces_hi[{i,j+1}], angle_values)
 			end
 		end
@@ -1322,15 +1322,6 @@ task main()
     -- Write a Tecplot file to vizualize the intensity.
     --todo: divide by tile?
     -- create_tecplot_file(points)
-
 end
 
 regentlib.start(main)
-
-
-
-
-
-
-
-
